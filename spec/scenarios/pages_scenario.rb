@@ -51,6 +51,11 @@ class PagesScenario < Scenario::Base
       create_page_part "games"
       create_page "Guests"
     end
+    
+    create_page "Single mum" do
+      create_page "Solo",  :published_at => DateTime.parse('2003-08-01 08:12:01')
+    end
+    
   end
   
 end

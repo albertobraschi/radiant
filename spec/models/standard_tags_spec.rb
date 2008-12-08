@@ -388,6 +388,194 @@ describe "Standard Tags" do
     it "should render nothing when the page has no author" do
       page(:no_user).should render('<r:author />').as('')
     end
+    
+    it "should render its contents when used as a double tag" do
+      page.should render('<r:author>true</r:author>').as('true')
+    end
+  end
+  
+  describe "<r:author:name>" do
+    it "should render the name of the current author" do
+      page.should render('<r:author:name />').as('Admin')
+    end
+  end
+  
+  describe "<r:author:email>" do
+    it "should render the email of the current author" do
+      page.should render('<r:author:email />').as('admin@example.com')
+    end
+    it "should render nothing if the current author has no email" do
+      page.created_by.update_attribute('email',nil)
+      page.should render('<r:author:email />').as('')
+    end
+  end
+  
+  describe "<r:author:bio>" do
+    it "should render the bio of the current author" do
+      page.created_by.update_attribute('bio',"This is all about me.")
+      page.should render('<r:author:bio />').as('This is all about me.')
+    end
+    it "should render nothing if the current author has no bio" do
+      page.created_by.update_attribute('bio',nil)
+      page.should render('<r:author:bio />').as('')
+    end
+    it "should filter the bio content with the bio_filter" do
+      page.created_by.update_attribute('bio',"This is *all* about me.")
+      page.created_by.update_attribute('bio_filter_id','Textile')
+      page.should render('<r:author:bio />').as('<p>This is <strong>all</strong> about me.</p>')
+    end
+  end
+  
+  describe "<r:author:gravatar_url />" do
+    before :each do
+      page.created_by.stub!(:email).and_return("seancribbs@gmail.com")
+      @base_url = "http://www.gravatar.com/avatar/8802b1fa1b53e2197beea9454244f847"
+    end
+
+    it "should render the base url" do
+      page.should render('<r:author:gravatar_url />').as(@base_url)
+    end
+    
+    it "should render the url with a size" do
+      page.should render('<r:author:gravatar_url size="30" />').as("#{@base_url}?s=30")
+    end
+    
+    it "should render the url with a rating" do
+      page.should render('<r:author:gravatar_url rating="G" />').as("#{@base_url}?r=g")
+    end
+    
+    it "should render the url with a default" do
+      page.should render('<r:author:gravatar_url default="identicon" />').as("#{@base_url}?d=identicon")
+    end
+    
+    it "should render the url with a format" do
+      page.should render('<r:author:gravatar_url format="jpg" />').as("#{@base_url}.jpg")
+    end
+    
+    it "should render the url with all options" do
+      page.should render('<r:author:gravatar_url size="30" rating="G" default="identicon" format="jpg"/>').as("#{@base_url}.jpg?s=30&d=identicon&r=g")
+    end
+  end
+  
+  describe "<r:authors>" do
+    it "should render it's contents" do
+      page.should render('<r:authors>Authors</r:authors>').as('Authors')
+    end
+  end
+  
+  describe "<r:authors:each>" do
+    it "should render it's contents for each author" do
+      page.should render('<r:authors:each>author </r:authors:each>').as('author author author author author author ')
+    end
+    
+    it "should allow a login attribute to limit the group of authors to the given login" do
+      page.should render('<r:authors:each login="admin">author </r:authors:each>').as('author ')
+    end
+    
+    it "should return no authors when given a non-existant login for the login attribute" do
+      page.should render('<r:authors:each login="none">author </r:authors:each>').as('')
+    end
+    
+    it "should allow a comma delimited list of logins to limit the group of authors" do
+      page.should render('<r:authors:each login="admin, another">author </r:authors:each>').as('author author ')
+    end
+    
+    it "should allow a limit attribute to limit the collection" do
+      page.should render('<r:authors:each limit="3">author </r:authors:each>').as('author author author ')
+    end
+    
+    it "should allow a offset attribute to offset the collection" do
+      page.should render('<r:authors:each limit="2" offset="3">author </r:authors:each>').as('author author ')
+    end
+
+    it 'should error with a "limit" attribute that is not a positive number between 1 and 4 digits' do
+      message = "`limit' attribute of `each' tag must be a positive number between 1 and 4 digits"
+      page.should render('<r:authors:each limit="-10"></r:authors:each>').with_error(message)
+    end
+
+    it 'should error with a "offset" attribute that is not a positive number between 1 and 4 digits' do
+      message = "`offset' attribute of `each' tag must be a positive number between 1 and 4 digits"
+      page.should render('<r:authors:each offset="a"></r:authors:each>').with_error(message)
+    end
+  end
+  
+  describe "<r:authors:each:name>" do
+    it "should render the name of the current author" do
+      page.should render("<r:authors:each><r:name /> </r:authors:each>").as('Admin Another Developer Existing Non-admin Pages Tester ')
+    end
+  end
+  
+  describe "<r:authors:each:email>" do
+    it "should render the email of the current author" do
+      page.should render("<r:authors:each><r:email /> </r:authors:each>").as('admin@example.com another@example.com developer@example.com existing@example.com non_admin@example.com pages_tester@example.com ')
+    end
+    
+    it "should render nothing if the current author has no email" do
+      users(:admin).update_attribute(:email, nil)
+      page.should render('<r:authors:each login="admin"><r:email /></r:authors:each>').as('')
+    end
+  end
+  
+  describe "<r:authors:each:bio>" do
+    it "should render the bio of the current author" do
+      User.find(:all).each {|user| user.update_attribute('bio', "My bio.")}
+      page.should render("<r:authors:each><r:bio /> </r:authors:each>").as('My bio. My bio. My bio. My bio. My bio. My bio. ')
+    end
+    
+    it "should render nothing if the current author has no bio" do
+      users(:admin).update_attribute(:bio, nil)
+      page.should render('<r:authors:each login="admin"><r:bio /></r:authors:each>').as('')
+    end
+  end
+  
+  describe "<r:pages>" do
+    it "should render the contents if there is a current author" do
+      page.created_by = users(:admin)
+      page.should render('<r:pages>true</r:pages>').as('true')
+    end
+    it "should not render the contents if there is no current author" do
+      page.created_by = nil
+      page.should render('<r:pages>true</r:pages>').as('')
+    end
+  end
+  
+  describe "<r:pages:each>" do
+    it "should render it's contents sorting the author's pages by the given by attribute" do
+      page.should render('<r:pages:each limit="5" by="slug"><r:slug /> </r:pages:each>').as('/ a another article article-2 ')
+    end
+    
+    it "should render it's contents for each of the author's visible pages" do
+      page_marks = 'x' * page.created_by.pages.find(:all, :conditions => {:status_id => 100, :virtual => false}).size
+      page.should render('<r:pages:each>x</r:pages:each>').as(page_marks)
+    end
+    
+    it "should render it's contents limiting the author's pages to the given limit attribute" do
+      page.should render('<r:pages:each limit="3"><r:title /> </r:pages:each>').as('Article Article 2 Article 3 ')
+    end
+    
+    it "should offset the pages when given limit and offset attributes between 1 and 4 digits" do
+      page.should render('<r:pages:each limit="3" offset="1"><r:title /> </r:pages:each>').as('Article 2 Article 3 Article 4 ')
+    end
+
+    it 'should error with a "limit" attribute that is not a positive number between 1 and 4 digits' do
+      message = "`limit' attribute of `each' tag must be a positive number between 1 and 4 digits"
+      page.should render('<r:pages:each limit="-10"></r:pages:each>').with_error(message)
+    end
+
+    it 'should error with a "offset" attribute that is not a positive number between 1 and 4 digits' do
+      message = "`offset' attribute of `each' tag must be a positive number between 1 and 4 digits"
+      page.should render('<r:pages:each offset="a"></r:pages:each>').with_error(message)
+    end
+    
+    it "should find the author's pages as children of the page url in the given url attribute" do
+      page.should render('<r:pages:each url="/parent"><r:title /> </r:pages:each>').as('Child Child 2 Child 3 ')
+    end
+  end
+
+  describe "<r:pages:count>" do
+    it "should render the number of visible pages for the current author" do
+      page.should render('<r:authors:each login="pages_tester"><r:pages:count /></r:authors:each>').as('6')
+    end
   end
 
   describe "<r:date>" do
@@ -904,6 +1092,170 @@ describe "Standard Tags" do
       it "should escape the contents of the keywords" do
         page.should render('<r:meta:keywords tag="false" />').as("sweet &amp; harmonious biscuits")
       end
+    end
+  end
+
+  describe "<r:siblings>" do
+    it "should expand its contents" do
+      page(:sneezy).should render('<r:siblings>true</r:siblings>').as('true')
+    end
+    it "should allow siblings to be ordered by the 'by' attribute" do
+      page(:sneezy).should render('<r:siblings by="title"><r:each><r:title /> </r:each></r:siblings>').as('Bashful Doc Dopey Grumpy Happy ')
+    end
+    it "should allow siblings to be sorted with the 'order' attribute when using 'by'" do
+      page(:sneezy).should render('<r:siblings by="slug" order="asc"><r:each><r:title /> </r:each></r:siblings>').as('Bashful Doc Dopey Grumpy Happy ')
+    end
+  end
+  describe "<r:siblings:each>" do
+    it "should order the page siblings by published_at" do
+      page(:sneezy).should render('<r:siblings:each><r:title/> </r:siblings:each>').as('Happy Grumpy Dopey Doc Bashful ')
+    end
+    it "should allow siblings to be ordered by the 'by' attribute" do
+      page(:sneezy).should render('<r:siblings:each by="title"><r:title /> </r:siblings:each>').as('Bashful Doc Dopey Grumpy Happy ')
+    end
+    it "should allow siblings to be sorted with the 'order' attribute when using 'by'" do
+      page(:sneezy).should render('<r:siblings:each by="slug" order="asc"><r:title /> </r:siblings:each>').as('Bashful Doc Dopey Grumpy Happy ')
+    end
+    it "should exclude the current page" do
+      page(:sneezy).should render('<r:siblings:each><r:title/> </r:siblings:each>').as('Happy Grumpy Dopey Doc Bashful ')
+    end
+    it "should exclude unpublished pages" do
+      page(:sneezy).should render('<r:siblings:each><r:title/> </r:siblings:each>').as('Happy Grumpy Dopey Doc Bashful ')
+    end
+  end  
+      
+  describe "<r:if_siblings>" do
+    it 'should output its contents if the current page has siblings' do
+      page(:happy).should render('<r:if_siblings>true</r:if_siblings>').as('true')
+    end
+    it 'should not output its contents if the current page has no siblings' do
+      page(:solo).should render('<r:if_siblings>false</r:if_siblings>').as('')
+    end
+  end
+  
+  describe "<r:unless_siblings>" do
+    it 'should output its contents if the current page has no siblings' do
+      page(:solo).should render('<r:unless_siblings>true</r:unless_siblings>').as('true')
+    end
+    it 'should not output its contents if the current page has siblings' do
+      page(:happy).should render('<r:unless_siblings>false</r:unless_siblings>').as('')
+    end
+  end
+  
+  describe "<r:siblings:next>" do
+    it 'should output nothing if the current page has no siblings' do
+      page(:home).should render('<r:siblings:next>false</r:siblings:next>').as('')
+    end
+    it 'should output its contents if the current page has a sibling next in order' do
+      page(:doc).should render('<r:siblings:next>true</r:siblings:next>').as('true')
+    end
+    it 'should not output its contents if the current page has siblings, but not next in order' do
+      page(:bashful).should render('<r:siblings:next>true</r:siblings:next>').as('')
+    end
+    it "should set the scoped page to the next page in order" do
+      page(:doc).should render('<r:siblings:next><r:title /></r:siblings:next>').as('Bashful')
+    end
+    it "should work recursively when called more than once" do
+      page(:dopey).should render('<r:siblings><r:next><r:next><r:title /></r:next></r:next></r:siblings>').as('Bashful')
+    end
+    it "should order with 'by' attribute in siblings tag" do
+      page(:dopey).should render('<r:siblings by="title"><r:next><r:title/></r:next></r:siblings>').as('Grumpy')
+    end
+    it "should order with 'by' attribute in next tag" do
+      page(:dopey).should render('<r:siblings:next by="title"><r:title/></r:siblings:next>').as('Grumpy')
+    end
+  end
+  
+  describe "<r:siblings:each_before>" do
+    it "should render its contents for each sibling following the current one in order" do
+      page(:dopey).should render('<r:siblings:each_before><r:title /> </r:siblings:each_before>').as('Grumpy Happy Sneezy ')
+    end
+    it "should use 'order' as set in siblings tag" do
+      page(:dopey).should render('<r:siblings order="desc"><r:each_before><r:title /> </r:each_before></r:siblings>').as('Doc Bashful ')
+    end
+    it "should use 'order' and 'by' as set in siblings tag" do
+      page(:dopey).should render('<r:siblings order="desc" by="title"><r:each_before><r:title /> </r:each_before></r:siblings>').as('Grumpy Happy Sneezy ')
+    end
+    it "should use 'order' as set in each_before tag" do
+      page(:dopey).should render('<r:siblings:each_before order="desc"><r:title /> </r:siblings:each_before>').as('Doc Bashful ')
+    end
+    it "should use 'order' and 'by' as set in each_before tag" do
+      page(:dopey).should render('<r:siblings:each_before order="desc" by="title"><r:title /> </r:siblings:each_before>').as('Grumpy Happy Sneezy ')
+    end
+  end
+  
+  describe "<r:siblings:each_after>" do
+    it "should render its contents for each sibling following the current one in order" do
+      page(:dopey).should render('<r:siblings:each_after><r:title /> </r:siblings:each_after>').as('Doc Bashful ')
+    end
+    it "should use 'order' as set in siblings tag" do
+      page(:dopey).should render('<r:siblings order="desc"><r:each_after><r:title /> </r:each_after></r:siblings>').as('Grumpy Happy Sneezy ')
+    end
+    it "should use 'order' and 'by' as set in siblings tag" do
+      page(:dopey).should render('<r:siblings order="desc" by="title"><r:each_after><r:title /> </r:each_after></r:siblings>').as('Doc Bashful ')
+    end
+    it "should use 'order' and 'by' as set in each_after tag" do
+      page(:dopey).should render('<r:siblings:each_after order="desc" by="title"><r:title /> </r:siblings:each_after>').as('Doc Bashful ')
+    end
+  end
+  
+  describe "<r:siblings:previous>" do
+    it 'should output nothing if the current page has no siblings' do
+      page(:home).should render('<r:siblings:previous>false</r:siblings:previous>').as('')
+    end
+    it 'should output its contents if the current page has a sibling previous in order' do
+      page(:doc).should render('<r:siblings:previous>true</r:siblings:previous>').as('true')
+    end
+    it 'should not output its contents if the current page has siblings, but not previous in order' do
+      page(:sneezy).should render('<r:siblings:previous>true</r:siblings:previous>').as('')
+    end
+    it "should set the scoped page to the previous page in order" do
+      page(:doc).should render('<r:siblings:previous><r:title /></r:siblings:previous>').as('Dopey')
+    end
+    it "should set the scoped page to the previous page in order" do
+      page(:doc).should render('<r:siblings:previous><r:previous><r:title /></r:previous></r:siblings:previous>').as('Grumpy')
+    end
+    it "should order with 'by' attribute in siblings tag" do
+      page(:dopey).should render('<r:siblings by="title"><r:previous><r:title/></r:previous></r:siblings>').as('Doc')
+    end
+    it "should order with 'by' attribute in previous tag" do
+      page(:dopey).should render('<r:siblings:previous by="title"><r:title/></r:siblings:previous>').as('Doc')
+    end
+  end
+  
+  describe "<r:sibling:if_next>" do
+    it "should output its contents if the current page has a sibling next in order" do
+      page(:doc).should render('<r:siblings:if_next>true</r:siblings:if_next>').as('true')
+    end
+    it "should not output its contents if the current page has no sibling next in order" do
+      page(:bashful).should render('<r:siblings:if_next>true</r:siblings:if_next>').as('')
+    end
+  end
+  
+  describe "<r:siblings:unless_next>" do
+    it "should output its contents if the current page has no sibling next in order" do
+      page(:bashful).should render('<r:siblings:unless_next>true</r:siblings:unless_next>').as('true')
+    end
+    it "should not output its contents if the current page has a sibling next in order" do
+      page(:doc).should render('<r:siblings:unless_next>true</r:siblings:unless_next>').as('')
+    end
+  end
+  
+  describe "<r:siblings:if_previous>" do
+    it "should output its contents if the current page has a sibling previous in order" do
+      page(:doc).should render('<r:siblings:if_previous>true</r:siblings:if_previous>').as('true')
+    end
+    it "should not output its contents if the current page has no sibling previous in order" do
+      page(:sneezy).should render('<r:siblings:if_previous>true</r:siblings:if_previous>').as('')
+    end
+  end
+  
+  describe "<r:siblings:unless_previous>" do
+    it "should output its contents if the current page has no sibling previous in order" do
+      page(:sneezy).should render('<r:siblings:unless_previous>true</r:siblings:unless_previous>').as('true')
+    end
+    it "should not output its contents if the current page has a sibling previous in order" do
+      page(:doc).should render('<r:siblings:unless_previous>true</r:siblings:unless_previous>').as('')
     end
   end
 

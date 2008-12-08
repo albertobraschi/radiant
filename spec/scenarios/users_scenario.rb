@@ -6,6 +6,7 @@ class UsersScenario < Scenario::Base
     create_user "Admin", :admin => true
     create_user "Developer", :developer => true
     create_user "Non-admin", :admin => false
+    create_user "Pages Tester"
   end
   
   helpers do
@@ -19,7 +20,8 @@ class UsersScenario < Scenario::Base
         :name => name,
         :email => "#{symbol}@example.com", 
         :login => symbol.to_s,
-        :password => "password"
+        :password => "password",
+        :notes => "#{symbol} note"
       }.merge(attributes)
       attributes[:password_confirmation] = attributes[:password]
       attributes

@@ -54,6 +54,15 @@
               = f.label :developer
           %td.help
             Roles restrict user privileges and turn parts of the administrative interface on or off.
+      - form.edit_bio do
+        %tr
+          %th.label
+            %label.optional{:for=>"bio"} Bio
+          %td.field
+            ~ select_tag "user[bio_filter_id]", options_for_select([['<none>', '']] + TextFilter.descendants.map { |s| s.filter_name }.sort, @user.bio_filter_id), :style => 'float: left; margin-left: 10px'
+            ~ text_area "user", "bio", :size => '40x10', :class => "textarea bio_textarea" 
+          %td.help
+            Optional description of the Author.
       - form.edit_notes do
         %tr
           %th.label
@@ -61,7 +70,7 @@
           %td.field
             ~ f.text_area "notes", :size => '40x4', :class => "textarea" 
           %td.help
-            Optional.
+            Optional. Not seen or editable by non-admin users.
   - render_region :form_bottom do |form_bottom|
     - form_bottom.edit_timestamp do
       = updated_stamp @user  

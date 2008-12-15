@@ -457,6 +457,8 @@ module StandardTags
     <pre><code><r:author>text</r:author></code></pre>
   }
   tag 'author' do |tag|
+    login = tag.attr['login']
+    tag.locals.author = User.find_by_login(login) if login
     if tag.locals.author
       tag.double? ? tag.expand : tag.locals.author.name
     else

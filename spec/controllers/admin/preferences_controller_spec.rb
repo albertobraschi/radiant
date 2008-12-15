@@ -1,8 +1,7 @@
 require File.expand_path(File.dirname(__FILE__) + '/../../spec_helper')
 
 describe Admin::PreferencesController do
-  scenario :users
-  test_helper :logging
+  dataset :users
   
   it "should allow you to view your preferences" do
     user = login_as(:non_admin)

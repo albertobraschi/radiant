@@ -1,10 +1,16 @@
 == Change Log
 
 === Edge
+* Allow scoping <r:author> with login="login_name" [Jim Gay]
 * Added <r:siblings> with each, previous, next, each_before, each_after [Jim Gay, Andrew Neil]
 * Made <r:author> both a single and double tag with more visible attributes [Jim Gay]
 * Added <r:pages> and associated tags to list pages by the current author [Jim Gay]
 * Added <r:authors> and associated tags to list details about site authors [Jim Gay, Sean Cribbs]
+* Converted extension migrations to use schema_migrations table instead 
+of extension_meta. [Nathaniel Talbott, Sean Cribbs, Rick DeNatale]
+* Replaced scenarios with dataset. [Nathaniel Talbott, Adam Williams, Rick DeNatale]
+* Fix RSpec git submodules. [Nathaniel Talbott, Clinton Nixon]
+* Generate and fix gemspec for GitHub. [Sean Cribbs]
 
 === 0.7.0-RC1
 * Add support for newer Textile and Markdown libraries, with fallbacks

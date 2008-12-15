@@ -9,7 +9,7 @@
 #
 # It's strongly recommended to check this file into your version control system.
 
-ActiveRecord::Schema.define(:version => 20081208005628) do
+ActiveRecord::Schema.define(:version => 20081203140407) do
 
   create_table "config", :force => true do |t|
     t.string "key",   :limit => 40, :default => "", :null => false
@@ -42,7 +42,7 @@ ActiveRecord::Schema.define(:version => 20081208005628) do
     t.integer "page_id"
   end
 
-  add_index "page_parts", ["name", "page_id"], :name => "parts_by_page"
+  add_index "page_parts", ["page_id", "name"], :name => "parts_by_page"
 
   create_table "pages", :force => true do |t|
     t.string   "title"
@@ -63,10 +63,10 @@ ActiveRecord::Schema.define(:version => 20081208005628) do
     t.string   "keywords"
   end
 
-  add_index "pages", ["parent_id", "slug"], :name => "pages_child_slug"
   add_index "pages", ["class_name"], :name => "pages_class_name"
   add_index "pages", ["parent_id"], :name => "pages_parent_id"
-  add_index "pages", ["status_id", "virtual"], :name => "pages_published"
+  add_index "pages", ["slug", "parent_id"], :name => "pages_child_slug"
+  add_index "pages", ["virtual", "status_id"], :name => "pages_published"
 
   create_table "sessions", :force => true do |t|
     t.string   "session_id"
@@ -105,8 +105,6 @@ ActiveRecord::Schema.define(:version => 20081208005628) do
     t.integer  "lock_version",                 :default => 0
     t.string   "salt"
     t.string   "session_token"
-    t.text     "bio"
-    t.string   "bio_filter_id", :limit => 25
   end
 
   add_index "users", ["login"], :name => "login", :unique => true

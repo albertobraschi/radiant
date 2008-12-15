@@ -1,7 +1,7 @@
 require File.dirname(__FILE__) + '/../spec_helper'
 
 describe "Standard Tags" do
-  scenario :users_and_pages, :file_not_found, :snippets
+  dataset :users_and_pages, :file_not_found, :snippets
 
   it '<r:page> should allow access to the current page' do
     page(:home)
@@ -391,6 +391,10 @@ describe "Standard Tags" do
     
     it "should render its contents when used as a double tag" do
       page.should render('<r:author>true</r:author>').as('true')
+    end
+    
+    it "should set the author to that with the given login" do
+      page.should render('<r:author login="pages_tester" />').as('Pages Tester')
     end
   end
   

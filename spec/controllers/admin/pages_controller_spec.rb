@@ -1,8 +1,7 @@
 require File.dirname(__FILE__) + '/../../spec_helper'
 
 describe Admin::PagesController do
-  scenario :users, :pages
-  test_helper :pages, :page_parts, :caching
+  dataset :users, :pages
 
   before :each do
     login_as :existing

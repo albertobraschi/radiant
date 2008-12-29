@@ -6,6 +6,10 @@
 * Made <r:author> both a single and double tag with more visible attributes [Jim Gay]
 * Added <r:pages> and associated tags to list pages by the current author [Jim Gay]
 * Added <r:authors> and associated tags to list details about site authors [Jim Gay, Sean Cribbs]
+* Correct assume_migrated_upto_version behavior in instance mode. [Sean Cribbs]
+* Correct missing @@configuration variable in initializer. [John Muhl]
+* Handle SQL special characters in extension names in migrations. 
+[Erik Ostrom]
 * Converted extension migrations to use schema_migrations table instead 
 of extension_meta. [Nathaniel Talbott, Sean Cribbs, Rick DeNatale]
 * Replaced scenarios with dataset. [Nathaniel Talbott, Adam Williams, Rick DeNatale]
